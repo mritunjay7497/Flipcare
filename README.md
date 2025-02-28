@@ -2,6 +2,8 @@
 
 FlipCare is a healthcare appointment scheduling system that connects patients with doctors. This document provides detailed information about the API contracts for the application.
 
+# Please run `npm start` to install necessary packages and start the project
+
 ## Table of Contents
 - [Overview](#overview)
 - [Entities](#entities)
