@@ -1,99 +1,480 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# FlipCare API Documentation
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+FlipCare is a healthcare appointment scheduling system that connects patients with doctors. This document provides detailed information about the API contracts for the application.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Table of Contents
+- [Overview](#overview)
+- [Entities](#entities)
+- [API Endpoints](#api-endpoints)
+  - [Doctor APIs](#doctor-apis)
+  - [Patient APIs](#patient-apis)
+  - [Appointment APIs](#appointment-apis)
+  - [Slot APIs](#slot-apis)
+  - [Waitlist APIs](#waitlist-apis)
+- [Data Models](#data-models)
+- [Business Rules](#business-rules)
+- [Error Handling](#error-handling)
 
-## Description
+## Overview
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+FlipCare divides each day into 30-minute slots from 9 AM to 9 PM. Doctors declare their availability in these slots, and patients can book appointments based on availability. The system also supports features like appointment cancellation, waitlisting, and trending doctor identification.
 
-## Project setup
+## Entities
 
-```bash
-$ npm install
+The system consists of five main entities:
+
+1. **Doctor**: Healthcare professionals with specialities
+2. **Patient**: Users who book appointments with doctors
+3. **Slot**: 30-minute time blocks that doctors mark as available
+4. **Appointment**: Booking of a patient with a doctor for a specific slot
+5. **Waitlist Entry**: Request to book an already-booked slot
+
+## API Endpoints
+
+### Doctor APIs
+
+#### Register Doctor
+Creates a new doctor account with speciality.
+
+**Endpoint**: `POST /doctors/register`
+
+**Request**:
+```json
+{
+  "name": "string",
+  "speciality": "Cardiologist | Dermatologist | Orthopedic | General Physician"
+}
 ```
 
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+**Response**:
+```json
+{
+  "message": "Welcome Dr. {name} !!",
+  "doctor": {
+    "id": "string",
+    "name": "string",
+    "speciality": "string",
+    "rating": 0,
+    "appointmentCount": 0
+  }
+}
 ```
 
-## Run tests
+#### Mark Doctor Availability
+Set available time slots for a doctor.
 
-```bash
-# unit tests
-$ npm run test
+**Endpoint**: `PUT /doctors/availability`
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+**Request**:
+```json
+{
+  "doctorId": "string",
+  "timeSlots": [
+    {
+      "startTime": "2025-02-28T09:30:00",
+      "endTime": "2025-02-28T10:00:00"
+    }
+  ]
+}
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g mau
-$ mau deploy
+**Response**:
+```json
+{
+  "message": "Done Doc! | Sorry Dr., slots are 30 mins only"
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+#### Get Doctor by ID
+Retrieves a specific doctor's details.
 
-## Resources
+**Endpoint**: `GET /doctors/{id}`
 
-Check out a few resources that may come in handy when working with NestJS:
+**Response**:
+```json
+{
+  "id": "string",
+  "name": "string",
+  "speciality": "string",
+  "rating": 0,
+  "appointmentCount": 0
+}
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+#### Get Doctors by Speciality
+Lists all doctors of a given speciality.
 
-## Support
+**Endpoint**: `GET /doctors/speciality/{speciality}`
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+**Response**:
+```json
+[
+  {
+    "id": "string",
+    "name": "string",
+    "speciality": "string",
+    "rating": 0,
+    "appointmentCount": 0
+  }
+]
+```
 
-## Stay in touch
+#### Get Trending Doctor
+Returns the doctor with the most appointments.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+**Endpoint**: `GET /doctors/trending`
 
-## License
+**Response**:
+```json
+{
+  "id": "string",
+  "name": "string",
+  "speciality": "string",
+  "rating": 0,
+  "appointmentCount": 10
+}
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+#### Get All Doctors
+Lists all doctors in the system.
+
+**Endpoint**: `GET /doctors`
+
+**Response**:
+```json
+[
+  {
+    "id": "string",
+    "name": "string",
+    "speciality": "string",
+    "rating": 0,
+    "appointmentCount": 0
+  }
+]
+```
+
+### Patient APIs
+
+#### Register Patient
+Creates a new patient account.
+
+**Endpoint**: `POST /patients/register`
+
+**Request**:
+```json
+{
+  "name": "string"
+}
+```
+
+**Response**:
+```json
+{
+  "message": "Registration successful",
+  "patient": {
+    "id": "string",
+    "name": "string"
+  }
+}
+```
+
+#### Get Patient by ID
+Retrieves a specific patient's details.
+
+**Endpoint**: `GET /patients/{id}`
+
+**Response**:
+```json
+{
+  "id": "string",
+  "name": "string"
+}
+```
+
+#### Get All Patients
+Lists all patients in the system.
+
+**Endpoint**: `GET /patients`
+
+**Response**:
+```json
+[
+  {
+    "id": "string",
+    "name": "string"
+  }
+]
+```
+
+### Appointment APIs
+
+#### Book Appointment
+Books an appointment for a patient with a doctor.
+
+**Endpoint**: `POST /appointments/book`
+
+**Request**:
+```json
+{
+  "patientId": "string",
+  "doctorId": "string",
+  "startTime": "2025-02-28T12:30:00"
+}
+```
+
+**Response (Success)**:
+```json
+{
+  "message": "Booked. Booking id: {bookingId}",
+  "appointment": {
+    "id": "string",
+    "patient": {
+      "id": "string",
+      "name": "string"
+    },
+    "slot": {
+      "id": "string",
+      "doctor": {
+        "id": "string",
+        "name": "string",
+        "speciality": "string"
+      },
+      "startTime": "2025-02-28T12:30:00",
+      "endTime": "2025-02-28T13:00:00",
+      "status": "BOOKED"
+    },
+    "bookingTime": "2025-02-28T08:15:32"
+  }
+}
+```
+
+**Response (Failure - Added to Waitlist)**:
+```json
+{
+  "message": "Booking failed. Slot not available or conflicting appointment. Added to waitlist."
+}
+```
+
+#### Cancel Appointment
+Cancels an existing appointment.
+
+**Endpoint**: `DELETE /appointments/cancel`
+
+**Request**:
+```json
+{
+  "bookingId": "string"
+}
+```
+
+**Response**:
+```json
+{
+  "message": "Booking Cancelled | Booking not found"
+}
+```
+
+#### Get Available Slots by Speciality
+Lists all available slots for doctors of a particular speciality.
+
+**Endpoint**: `GET /appointments/available/{speciality}`
+
+**Response**:
+```json
+[
+  {
+    "doctor": "Dr.Sharma",
+    "timeSlot": "9:30 AM-10:00 AM"
+  },
+  {
+    "doctor": "Dr.Sharma",
+    "timeSlot": "4:00 PM-4:30 PM"
+  }
+]
+```
+
+#### Get Appointments by Patient
+Lists all appointments for a specific patient.
+
+**Endpoint**: `GET /appointments/patient/{patientId}`
+
+**Response**:
+```json
+[
+  {
+    "id": "string",
+    "patient": {
+      "id": "string",
+      "name": "string"
+    },
+    "slot": {
+      "id": "string",
+      "doctor": {
+        "id": "string",
+        "name": "string",
+        "speciality": "string"
+      },
+      "startTime": "2025-02-28T12:30:00",
+      "endTime": "2025-02-28T13:00:00",
+      "status": "BOOKED"
+    },
+    "bookingTime": "2025-02-28T08:15:32"
+  }
+]
+```
+
+#### Get Appointments by Doctor
+Lists all appointments for a specific doctor.
+
+**Endpoint**: `GET /appointments/doctor/{doctorId}`
+
+**Response**:
+```json
+[
+  {
+    "id": "string",
+    "patient": {
+      "id": "string",
+      "name": "string"
+    },
+    "slot": {
+      "id": "string",
+      "doctor": {
+        "id": "string",
+        "name": "string",
+        "speciality": "string"
+      },
+      "startTime": "2025-02-28T12:30:00",
+      "endTime": "2025-02-28T13:00:00",
+      "status": "BOOKED"
+    },
+    "bookingTime": "2025-02-28T08:15:32"
+  }
+]
+```
+
+#### Get All Appointments
+Lists all appointments in the system.
+
+**Endpoint**: `GET /appointments`
+
+**Response**:
+```json
+[
+  {
+    "id": "string",
+    "patient": {
+      "id": "string",
+      "name": "string"
+    },
+    "slot": {
+      "id": "string",
+      "doctor": {
+        "id": "string",
+        "name": "string",
+        "speciality": "string"
+      },
+      "startTime": "2025-02-28T12:30:00",
+      "endTime": "2025-02-28T13:00:00",
+      "status": "BOOKED"
+    },
+    "bookingTime": "2025-02-28T08:15:32"
+  }
+]
+```
+
+## Data Models
+
+### Doctor
+```typescript
+{
+  id: string;
+  name: string;
+  speciality: Speciality; // Enum: CARDIOLOGIST, DERMATOLOGIST, ORTHOPEDIC, GENERAL_PHYSICIAN
+  rating: number;
+  appointmentCount: number;
+}
+```
+
+### Patient
+```typescript
+{
+  id: string;
+  name: string;
+}
+```
+
+### Slot
+```typescript
+{
+  id: string;
+  doctor: Doctor;
+  startTime: Date;
+  endTime: Date;
+  status: SlotStatus; // Enum: AVAILABLE, BOOKED
+}
+```
+
+### Appointment
+```typescript
+{
+  id: string;
+  patient: Patient;
+  slot: Slot;
+  bookingTime: Date;
+}
+```
+
+### WaitlistEntry
+```typescript
+{
+  id: string;
+  patient: Patient;
+  doctor: Doctor;
+  timeSlot: {
+    startTime: Date;
+    endTime: Date;
+  };
+  requestTime: Date;
+}
+```
+
+## Business Rules
+
+1. **Time Slots**:
+   - Each slot must be exactly 30 minutes
+   - Slots can range from 9 AM to 9 PM
+
+2. **Doctor Availability**:
+   - Doctors can declare availability for multiple slots
+   - Availability is set for the current day only
+
+3. **Booking Rules**:
+   - A slot can be booked by only one patient at a time
+   - A patient cannot book two appointments with different doctors at the same time
+   - A patient can book multiple appointments in a day (at different times)
+
+4. **Waitlist Rules**:
+   - If a slot is already booked, the patient can join the waitlist
+   - When a booked slot is canceled, it's assigned to the first patient in the waitlist
+   - Waitlist is processed in FIFO (First In, First Out) order
+
+5. **Slot Ranking**:
+   - By default, available slots are ordered by start time
+   - The ranking mechanism is designed to be extensible for future enhancements (e.g., sorting by doctor rating)
+
+6. **Trending Doctor**:
+   - The system tracks the doctor with the most appointments
+   - Appointment count is incremented when a booking is made and decremented when canceled
+
+## Error Handling
+
+The API returns appropriate HTTP status codes:
+
+- `200 OK`: Request was successful
+- `201 Created`: Resource was successfully created
+- `400 Bad Request`: Invalid input data (e.g., slot duration not 30 minutes)
+- `404 Not Found`: Resource not found (e.g., doctor, patient, or appointment)
+- `409 Conflict`: Conflict with current state (e.g., slot already booked)
+
+Each error response includes a descriptive message to help identify the issue.
